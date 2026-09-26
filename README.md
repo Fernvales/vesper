@@ -1,36 +1,101 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Vesper
 
-## Getting Started
+**Music, mapped differently.**
 
-First, run the development server:
+Vesper is a music discovery experience that visualizes connections between songs as an interactive constellation.
+
+Instead of browsing music through traditional lists, Vesper turns a song into a starting point and maps the signals around it — similar tracks, artists, genres, and other relationships found through real music data.
+
+No random connections. No fabricated recommendations. Just the music data Vesper can actually establish.
+
+## What it does
+
+* **Search for music** through a large catalog of songs
+* **Preview and play tracks** directly in the experience
+* **Explore a song universe** through connected music
+* **Follow connections** from one song to another
+* **Build a path** as you move through the universe
+* **Upload local audio** for a private, device-only listening experience
+* **Discover connections through Last.fm** and other music data sources
+
+## Built with
+
+* Next.js
+* React
+* TypeScript
+* Last.fm API
+* Apple Music / iTunes data
+* Deezer
+* Vercel
+
+## The idea
+
+Most music discovery interfaces are built around lists, search results, and recommendation feeds.
+
+Vesper takes a different approach.
+
+A song becomes a point in a larger musical space. From there, you can follow connections and see where the signal leads.
+
+The goal isn't to replace the way people listen to music — it's to make the relationships between songs something you can explore.
+
+## Local development
+
+Clone the repository and install the dependencies:
+
+```bash
+npm install
+```
+
+Create a `.env.local` file and add your Last.fm API key:
+
+```env
+LASTFM_API_KEY=your_api_key_here
+```
+
+Then start the development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000 in your browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Production
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Vesper is deployed with Vercel.
 
-## Learn More
+Before deploying, make sure the required environment variables are configured in the Vercel project.
 
-To learn more about Next.js, take a look at the following resources:
+Build locally with:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+npm run build
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Project structure
 
-## Deploy on Vercel
+```text
+app/
+├── api/
+│   └── music/
+├── components/
+├── lib/
+├── song/
+│   ├── [trackId]/
+│   └── uploaded/
+├── globals.css
+└── page.tsx
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Status
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+**Vesper 1.0**
+
+The first release is focused on the core experience:
+
+**search → play → explore → follow the signal**
+
+## License
+
+This project is currently provided as-is.
+
