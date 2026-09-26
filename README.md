@@ -22,7 +22,7 @@
 
 Vesper turns a song into a starting point.
 
-Instead of moving through traditional recommendation lists, Vesper maps the musical connections surrounding a track into an interactive constellation — letting you explore from one signal to the next.
+Instead of moving through traditional recommendation lists, Vesper maps the musical connections surrounding a track into an interactive constellation, letting you explore from one signal to the next.
 
 > No random connections.
 > No fabricated recommendations.
