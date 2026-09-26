@@ -1,78 +1,114 @@
-# Vesper
+<div align="center">
 
-**Music, mapped differently.**
+# V E S P E R
 
-Vesper is a music discovery experience that visualizes connections between songs as an interactive constellation.
+### *Music, mapped differently.*
 
-Instead of browsing music through traditional lists, Vesper turns a song into a starting point and maps the signals around it — similar tracks, artists, genres, and other relationships found through real music data.
+<br>
 
-No random connections. No fabricated recommendations. Just the music data Vesper can actually establish.
+**An interactive music discovery experience built around connections, not lists.**
 
-## What it does
+<br>
 
-* **Search for music** through a large catalog of songs
-* **Preview and play tracks** directly in the experience
-* **Explore a song universe** through connected music
-* **Follow connections** from one song to another
-* **Build a path** as you move through the universe
-* **Upload local audio** for a private, device-only listening experience
-* **Discover connections through Last.fm** and other music data sources
+[**Live Demo**](https://vesper-dev-steel.vercel.app/) · [**Repository**](https://github.com/Fernvales/Vesper)
 
-## Built with
+<br>
 
-* Next.js
-* React
-* TypeScript
-* Last.fm API
-* Apple Music / iTunes data
-* Deezer
-* Vercel
+</div>
 
-## The idea
+---
 
-Most music discovery interfaces are built around lists, search results, and recommendation feeds.
+## ◌ About
 
-Vesper takes a different approach.
+Vesper turns a song into a starting point.
 
-A song becomes a point in a larger musical space. From there, you can follow connections and see where the signal leads.
+Instead of moving through traditional recommendation lists, Vesper maps the musical connections surrounding a track into an interactive constellation — letting you explore from one signal to the next.
 
-The goal isn't to replace the way people listen to music — it's to make the relationships between songs something you can explore.
+> No random connections.
+> No fabricated recommendations.
+> Only relationships Vesper can actually establish from its music data.
 
-## Local development
+---
 
-Clone the repository and install the dependencies:
+## ✦ The Experience
+
+**Search**
+
+Find a song through Vesper's music catalog.
+
+**Signal**
+
+Start with a track and let Vesper build its surrounding universe.
+
+**Explore**
+
+Move through connected songs, artists, genres, and musical relationships.
+
+**Path**
+
+Every connection you follow becomes part of your journey through the universe.
+
+---
+
+## ◇ Built With
+
+| Technology         | Purpose                         |
+| ------------------ | ------------------------------- |
+| **Next.js**        | Application framework           |
+| **React**          | Interface                       |
+| **TypeScript**     | Type safety                     |
+| **Last.fm API**    | Music discovery & relationships |
+| **Apple / iTunes** | Music search & previews         |
+| **Deezer**         | Playback fallback               |
+| **Vercel**         | Deployment                      |
+
+---
+
+## ◌ Local Development
+
+Clone the repository:
 
 ```bash
+git clone https://github.com/Fernvales/Vesper.git
+cd Vesper
 npm install
 ```
 
-Create a `.env.local` file and add your Last.fm API key:
+Create `.env.local`:
 
 ```env
 LASTFM_API_KEY=your_api_key_here
 ```
 
-Then start the development server:
+Start the development server:
 
 ```bash
 npm run dev
 ```
 
-Open http://localhost:3000 in your browser.
+Then open:
 
-## Production
+```text
+http://localhost:3000
+```
+
+---
+
+## ✦ Production
 
 Vesper is deployed with Vercel.
 
-Before deploying, make sure the required environment variables are configured in the Vercel project.
+Before deploying, configure the required environment variables in your Vercel project.
 
-Build locally with:
+To verify a production build locally:
 
 ```bash
 npm run build
 ```
 
-## Project structure
+---
+
+## ◇ Structure
 
 ```text
 app/
@@ -87,15 +123,16 @@ app/
 └── page.tsx
 ```
 
-## Status
+---
 
-**Vesper 1.0**
+<div align="center">
 
-The first release is focused on the core experience:
+### Vesper 1.0
 
-**search → play → explore → follow the signal**
+*search → play → explore → follow the signal*
 
-## License
+<br>
 
-This project is currently provided as-is.
+<sub>Built with music, curiosity, and a little bit of code.</sub>
 
+</div>
