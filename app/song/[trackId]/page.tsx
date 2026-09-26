@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import {
   useParams,
@@ -28,11 +28,10 @@ type UniverseNode = {
   id: string;
   label: string;
   artist?: string;
-  genres?: string[];
-  previewUrl?: string | null;
-  artworkUrl?: string | null;
   album?: string | null;
-  provider?: string;
+  artworkUrl?: string | null;
+  previewUrl?: string | null;
+  genres?: string[];
   lastFmMatch?: number | null;
 };
 
@@ -102,12 +101,7 @@ type UniverseData = {
     artistId: string | null;
     genres: string[];
     score: number;
-    reason?: string;
-    previewUrl?: string | null;
-    artworkUrl?: string | null;
-    album?: string | null;
-    provider?: string;
-    lastFmMatch?: number;
+    lastFmMatch?: number | null;
   }>;
   graph: {
     center: {
@@ -125,7 +119,7 @@ type GraphPoint = {
   y: number;
 };
 
-type JourneyStop = {
+type JourneyItem = {
   id: string;
   title: string;
   artist: string;
@@ -133,6 +127,9 @@ type JourneyStop = {
   artwork: string | null;
   preview: string | null;
 };
+
+const JOURNEY_STORAGE_KEY = "vesper-journey-v1";
+const MAX_JOURNEY_LENGTH = 12;
 
 const songStyles = `
 .song-page {
@@ -740,6 +737,128 @@ const songStyles = `
   text-transform: uppercase;
 }
 
+.journey-strip {
+  position: relative;
+  z-index: 3;
+  margin: 0 auto 44px;
+  padding: 18px 20px;
+  border: 1px solid rgba(238,233,223,.06);
+  background: rgba(8,9,9,.42);
+  overflow: hidden;
+  animation: journey-arrival .9s cubic-bezier(.2,.8,.2,1) both;
+}
+
+.journey-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 14px;
+}
+
+.journey-label {
+  color: var(--gold);
+  font-size: 8px;
+  letter-spacing: .24em;
+  text-transform: uppercase;
+}
+
+.journey-clear {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: #555852;
+  font: inherit;
+  font-size: 7px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: color .25s ease;
+}
+
+.journey-clear:hover {
+  color: #aaa99f;
+}
+
+.journey-path {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  padding-bottom: 3px;
+}
+
+.journey-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+  max-width: 210px;
+  color: #aaa99f;
+  text-decoration: none;
+  transition: color .25s ease, transform .3s ease;
+}
+
+.journey-item:hover {
+  color: var(--ink);
+  transform: translateY(-1px);
+}
+
+.journey-dot {
+  width: 6px;
+  height: 6px;
+  flex: 0 0 auto;
+  border: 1px solid rgba(203,183,140,.55);
+  border-radius: 50%;
+  box-shadow: 0 0 12px rgba(203,183,140,.08);
+}
+
+.journey-item.current .journey-dot {
+  background: var(--gold);
+}
+
+.journey-item-copy {
+  min-width: 0;
+}
+
+.journey-item-title {
+  overflow: hidden;
+  color: inherit;
+  font-size: 10px;
+  line-height: 1.25;
+  letter-spacing: .06em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.journey-item-artist {
+  overflow: hidden;
+  color: #666961;
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-size: 11px;
+  line-height: 1.1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.journey-arrow {
+  flex: 0 0 auto;
+  color: #41443f;
+  font-size: 10px;
+}
+
+@keyframes journey-arrival {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .universe-graph-content {
   position: absolute;
   inset: 0;
@@ -835,9 +954,77 @@ const songStyles = `
   animation: line-shimmer 6s ease-in-out infinite;
 }
 
+.universe-line.is-selected {
+  stroke: rgba(203,183,140,.65);
+  stroke-width: 1.5;
+  filter: drop-shadow(0 0 5px rgba(203,183,140,.18));
+}
+
 .universe-line.secondary {
   stroke: rgba(238,233,223,.07);
   stroke-dasharray: 1 11;
+}
+
+.universe-connection-detail {
+  position: absolute;
+  left: 50%;
+  bottom: 30px;
+  z-index: 8;
+  width: min(420px, calc(100% - 40px));
+  transform: translateX(-50%);
+  padding: 14px 18px;
+  border: 1px solid rgba(203,183,140,.16);
+  background: rgba(8,9,9,.78);
+  backdrop-filter: blur(14px);
+  text-align: center;
+  pointer-events: none;
+  animation: connection-detail-in .35s ease both;
+}
+
+.universe-connection-detail-label {
+  color: var(--gold);
+  font-size: 7px;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+}
+
+.universe-connection-detail-text {
+  margin-top: 7px;
+  color: #aaa99f;
+  font-size: 10px;
+  line-height: 1.5;
+  letter-spacing: .04em;
+}
+
+.universe-node-link {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 9px;
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  transition: opacity .25s ease, transform .25s ease;
+}
+
+.universe-node.is-dimmed { opacity: .34; }
+.universe-node.is-selected .universe-node-dot {
+  border-color: var(--gold);
+  background: var(--gold);
+  box-shadow: 0 0 28px rgba(203,183,140,.35);
+}
+
+.universe-node.is-selected .universe-node-label { color: var(--ink); }
+
+.universe-node-similarity {
+  color: var(--gold);
+  font-size: 7px;
+  letter-spacing: .15em;
+}
+
+@keyframes connection-detail-in {
+  from { opacity: 0; transform: translate(-50%, 8px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
 }
 
 .universe-node {
@@ -869,7 +1056,6 @@ const songStyles = `
   font-size: 12px;
   line-height: 1.35;
   letter-spacing: .08em;
-  text-transform: uppercase;
   font-weight: 500;
   max-width: 190px;
   text-wrap: balance;
@@ -877,9 +1063,9 @@ const songStyles = `
 }
 
 .universe-node-type {
-  color: #696c65;
-  font-size: 8px;
-  letter-spacing: .16em;
+  color: #41443f;
+  font-size: 6px;
+  letter-spacing: .2em;
   text-transform: uppercase;
 }
 
@@ -890,39 +1076,9 @@ const songStyles = `
 }
 
 .universe-node.song .universe-node-dot {
-  width: 4px;
-  height: 4px;
-  border: 0;
-  background: #eee9df;
-  box-shadow: 0 0 7px rgba(238,233,223,.8), 0 0 15px rgba(203,183,140,.35);
-}
-
-.universe-node-star {
-  position: relative;
-  display: block;
-  width: 13px;
-  height: 13px;
-  transform: rotate(45deg);
-  opacity: .9;
-  transition: transform .2s ease, filter .2s ease;
-}
-
-.universe-node-star::before,
-.universe-node-star::after {
-  content: "";
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 2px;
-  height: 13px;
-  border-radius: 999px;
-  background: #eee9df;
-  box-shadow: 0 0 7px rgba(238,233,223,.8);
-  transform: translate(-50%, -50%);
-}
-
-.universe-node-star::after {
-  transform: translate(-50%, -50%) rotate(90deg);
+  width: 10px;
+  height: 10px;
+  border-color: rgba(203,183,140,.62);
 }
 
 .universe-node-link {
@@ -932,33 +1088,26 @@ const songStyles = `
   gap: 9px;
   color: inherit;
   text-decoration: none;
-  cursor: pointer;
 }
 
 .universe-node-artist {
   color: #85877f;
   font-family: var(--font-cormorant), Georgia, serif;
   font-size: 14px;
-  line-height: 1;
+  line-height: 1.1;
 }
 
 .universe-node-genres {
   color: #666961;
   font-size: 9px;
   letter-spacing: .11em;
-  line-height: 1.5;
+  line-height: 1.4;
   text-transform: uppercase;
 }
 
-.universe-node.song:hover .universe-node-star,
-.universe-node.song.is-selected .universe-node-star {
-  transform: rotate(45deg) scale(1.22);
-  filter: brightness(1.25);
-}
-
-.universe-node.song:hover .universe-node-dot,
-.universe-node.song.is-selected .universe-node-dot {
-  box-shadow: 0 0 10px rgba(238,233,223,.95), 0 0 22px rgba(203,183,140,.5);
+.universe-node.song:hover .universe-node-dot {
+  border-color: var(--gold);
+  box-shadow: 0 0 22px rgba(203,183,140,.18);
 }
 
 .universe-node.song:hover .universe-node-label {
@@ -1454,6 +1603,20 @@ const songStyles = `
 }
 
 @media(max-width:620px) {
+  .journey-strip {
+    margin-bottom: 30px;
+    padding: 15px 14px;
+  }
+
+  .journey-item-title {
+    font-size: 9px;
+  }
+
+  .journey-item-artist {
+    font-size: 10px;
+  }
+
+
   .song-nav {
     height: 72px;
   }
@@ -1506,11 +1669,20 @@ const songStyles = `
   }
 
   .universe-node-label {
-    font-size: 6px;
+    font-size: 10px;
+    letter-spacing: .07em;
+  }
+
+  .universe-node-artist {
+    font-size: 12px;
+  }
+
+  .universe-node-genres {
+    font-size: 8px;
   }
 
   .universe-node-type {
-    font-size: 5px;
+    font-size: 7px;
   }
 
   .song-universe-stage::before {
@@ -1528,214 +1700,6 @@ const songStyles = `
     bottom: 14px;
     gap: 10px;
   }
-}
-
-.journey-strip {
-  width: min(1120px, calc(100% - 48px));
-  margin: 0 auto 42px;
-  padding: 18px 0 0;
-  border-top: 1px solid rgba(238,233,223,.08);
-  animation: journey-arrival .9s cubic-bezier(.2,.8,.2,1) both;
-}
-
-.journey-topline {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 20px;
-  margin-bottom: 14px;
-}
-
-.journey-label {
-  color: #aaa99f;
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: .18em;
-  text-transform: uppercase;
-}
-
-.journey-clear {
-  border: 0;
-  background: transparent;
-  color: #666961;
-  cursor: pointer;
-  font: inherit;
-  font-size: 9px;
-  letter-spacing: .14em;
-  text-transform: uppercase;
-  padding: 4px 0;
-}
-
-.journey-path {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  overflow-x: auto;
-  padding-bottom: 6px;
-  scrollbar-width: thin;
-}
-
-.journey-stop {
-  flex: 0 0 auto;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 34px;
-  padding: 7px 11px;
-  border: 1px solid rgba(238,233,223,.09);
-  border-radius: 999px;
-  color: #85877f;
-  text-decoration: none;
-  transition: border-color .25s ease, color .25s ease, background .25s ease;
-}
-
-.journey-stop:hover,
-.journey-stop.current {
-  border-color: rgba(203,183,140,.38);
-  color: var(--ink);
-  background: rgba(203,183,140,.045);
-}
-
-.journey-stop-dot {
-  width: 6px;
-  height: 6px;
-  flex: 0 0 auto;
-  border: 1px solid rgba(203,183,140,.6);
-  border-radius: 50%;
-}
-
-.journey-stop-copy {
-  display: grid;
-  gap: 2px;
-}
-
-.journey-stop-title {
-  max-width: 180px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: 11px;
-  line-height: 1.1;
-}
-
-.journey-stop-artist {
-  color: #62655f;
-  font-family: var(--font-cormorant), Georgia, serif;
-  font-size: 11px;
-  line-height: 1;
-}
-
-.journey-arrow {
-  flex: 0 0 auto;
-  color: #454842;
-  font-size: 12px;
-}
-
-@keyframes journey-arrival {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.journey-strip.is-clearing {
-  animation: journey-departure .42s cubic-bezier(.4,0,.8,.2) both;
-}
-
-@keyframes journey-departure {
-  from {
-    opacity: 1;
-    transform: translateY(0);
-    max-height: 180px;
-  }
-  to {
-    opacity: 0;
-    transform: translateY(-8px);
-    max-height: 0;
-    margin-bottom: 0;
-    padding-top: 0;
-    border-top-color: transparent;
-  }
-}
-
-.universe-node-link:focus-visible {
-  outline: 1px solid rgba(203,183,140,.55);
-  outline-offset: 8px;
-  border-radius: 999px;
-}
-
-.universe-node.is-dimmed {
-  opacity: .32;
-}
-
-.universe-node.is-selected .universe-node-dot {
-  border-color: var(--gold);
-  background: var(--gold);
-  box-shadow: 0 0 28px rgba(203,183,140,.38);
-}
-
-.universe-node.is-selected .universe-node-label {
-  color: var(--ink);
-}
-
-.universe-node-similarity {
-  color: var(--gold);
-  font-size: 7px;
-  letter-spacing: .16em;
-  line-height: 1;
-}
-
-.universe-line.is-selected {
-  stroke: rgba(203,183,140,.7);
-  stroke-width: 1.7;
-  filter: drop-shadow(0 0 5px rgba(203,183,140,.2));
-}
-
-.universe-connection-detail {
-  position: absolute;
-  left: 50%;
-  bottom: 28px;
-  z-index: 8;
-  width: min(430px, calc(100% - 40px));
-  transform: translateX(-50%);
-  padding: 13px 18px 15px;
-  border: 1px solid rgba(203,183,140,.15);
-  background: rgba(8,9,9,.84);
-  backdrop-filter: blur(14px);
-  text-align: center;
-  pointer-events: none;
-  animation: connection-detail-in .28s ease both;
-}
-
-.universe-connection-detail-label {
-  color: var(--gold);
-  font-size: 7px;
-  letter-spacing: .22em;
-  text-transform: uppercase;
-}
-
-.universe-connection-detail-title {
-  margin-top: 6px;
-  color: var(--ink);
-  font-family: var(--font-cormorant), Georgia, serif;
-  font-size: 17px;
-}
-
-.universe-connection-detail-text {
-  margin-top: 5px;
-  color: #85877f;
-  font-size: 9px;
-  line-height: 1.5;
-  letter-spacing: .06em;
-}
-
-@keyframes connection-detail-in {
-  from { opacity: 0; transform: translate(-50%, 7px); }
-  to { opacity: 1; transform: translate(-50%, 0); }
 }
 
 @media(prefers-reduced-motion:reduce) {
@@ -1781,22 +1745,23 @@ function getGraphPoints(
   }));
 }
 
-
-async function resolveApplePreview(title: string, artist: string) {
+async function searchAppleDirectPreview(title: string, artist: string) {
   if (typeof document === "undefined") return null;
 
   return new Promise<{
     previewUrl: string;
     artworkUrl: string | null;
     albumName: string | null;
+    trackId: string;
   } | null>((resolve) => {
-    const callbackName = `__vesperPreview_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+    const callbackName = `__vesperPlayback_${Date.now()}_${Math.random().toString(36).slice(2)}`;
     const params = new URLSearchParams({
       term: `${title} ${artist}`,
       country: "US",
       media: "music",
       entity: "song",
-      limit: "10",
+      limit: "12",
+      lang: "en_us",
       callback: callbackName,
     });
 
@@ -1817,6 +1782,7 @@ async function resolveApplePreview(title: string, artist: string) {
       previewUrl: string;
       artworkUrl: string | null;
       albumName: string | null;
+      trackId: string;
     } | null) => {
       if (settled) return;
       settled = true;
@@ -1824,46 +1790,45 @@ async function resolveApplePreview(title: string, artist: string) {
       resolve(value);
     };
 
-    const timeout = window.setTimeout(() => finish(null), 9000);
-
-    const normalize = (value: string) =>
-      value
-        .normalize("NFKD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .toLowerCase()
-        .replace(/\b(feat\.?|ft\.?)\b.*$/i, "")
-        .replace(/[^a-z0-9]+/g, " ")
-        .trim()
-        .replace(/\s+/g, " ");
+    const timeout = window.setTimeout(() => finish(null), 10000);
 
     (window as unknown as Record<string, unknown>)[callbackName] = (
       data: { results?: unknown[] }
     ) => {
-      const wantedTitle = normalize(title);
-      const wantedArtist = normalize(artist);
+      const normalized = (value: string) =>
+        value
+          .normalize("NFKD")
+          .replace(/[\\u0300-\\u036f]/g, "")
+          .toLowerCase()
+          .replace(/\\b(feat\\.?|ft\\.?)\\b.*$/i, "")
+          .replace(/[^a-z0-9]+/g, " ")
+          .trim()
+          .replace(/\\s+/g, " ");
+
+      const wantedTitle = normalized(title);
+      const wantedArtist = normalized(artist);
       const results = Array.isArray(data?.results) ? data.results : [];
       const candidates = results.filter(
         (result): result is Record<string, unknown> =>
           Boolean(result) && typeof result === "object"
       );
 
-      const exact = candidates.find(
-        (result) =>
-          typeof result.trackName === "string" &&
-          typeof result.artistName === "string" &&
-          typeof result.previewUrl === "string" &&
-          normalize(result.trackName) === wantedTitle &&
-          normalize(result.artistName) === wantedArtist
+      const exact = candidates.find((result) =>
+        typeof result.trackName === "string" &&
+        typeof result.artistName === "string" &&
+        typeof result.previewUrl === "string" &&
+        normalized(result.trackName) === wantedTitle &&
+        normalized(result.artistName) === wantedArtist
       );
 
-      const titleMatch = candidates.find(
-        (result) =>
-          typeof result.trackName === "string" &&
-          typeof result.previewUrl === "string" &&
-          normalize(result.trackName) === wantedTitle
+      const titleMatch = candidates.find((result) =>
+        typeof result.trackName === "string" &&
+        typeof result.previewUrl === "string" &&
+        normalized(result.trackName) === wantedTitle
       );
 
       const match = exact ?? titleMatch;
+
       if (!match || typeof match.previewUrl !== "string" || !match.previewUrl) {
         finish(null);
         return;
@@ -1879,6 +1844,8 @@ async function resolveApplePreview(title: string, artist: string) {
           typeof match.collectionName === "string"
             ? match.collectionName
             : null,
+        trackId:
+          typeof match.trackId === "number" ? String(match.trackId) : "",
       });
     };
 
@@ -1909,14 +1876,13 @@ export default function SongPage() {
 
   const [universe, setUniverse] =
     useState<UniverseData | null>(null);
+
+  const [journey, setJourney] = useState<JourneyItem[]>([]);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
 
   const universeRef = useRef<HTMLElement | null>(null);
   const [universeVisible, setUniverseVisible] =
     useState(false);
-
-  const [journey, setJourney] = useState<JourneyStop[]>([]);
-  const [journeyClearing, setJourneyClearing] = useState(false);
 
   const song = useMemo(
     () => ({
@@ -1938,6 +1904,65 @@ export default function SongPage() {
     [params.trackId, searchParams]
   );
 
+  useEffect(() => {
+    try {
+      const stored = window.sessionStorage.getItem(JOURNEY_STORAGE_KEY);
+      if (!stored) return;
+
+      const parsed = JSON.parse(stored) as unknown;
+      if (!Array.isArray(parsed)) return;
+
+      const valid = parsed.filter(
+        (item): item is JourneyItem =>
+          Boolean(item) &&
+          typeof item === "object" &&
+          typeof (item as JourneyItem).id === "string" &&
+          typeof (item as JourneyItem).title === "string" &&
+          typeof (item as JourneyItem).artist === "string"
+      );
+
+      setJourney(valid.slice(-MAX_JOURNEY_LENGTH));
+    } catch {
+      setJourney([]);
+    }
+  }, []);
+
+  useEffect(() => {
+    const item: JourneyItem = {
+      id: song.id,
+      title: song.title,
+      artist: song.artist,
+      album: song.album,
+      artwork: song.artwork,
+      preview: song.preview,
+    };
+
+    setJourney((current) => {
+      const withoutCurrent = current.filter((entry) => entry.id !== item.id);
+      const next = [...withoutCurrent, item].slice(-MAX_JOURNEY_LENGTH);
+
+      try {
+        window.sessionStorage.setItem(
+          JOURNEY_STORAGE_KEY,
+          JSON.stringify(next)
+        );
+      } catch {
+        // Session storage can be unavailable in private or restricted contexts.
+      }
+
+      return next;
+    });
+  }, [song.album, song.artist, song.artwork, song.id, song.preview, song.title]);
+
+  const clearJourney = () => {
+    setJourney([]);
+    try {
+      window.sessionStorage.removeItem(JOURNEY_STORAGE_KEY);
+    } catch {
+      // Ignore storage errors.
+    }
+  };
+
   const resolvedPlaybackUrl =
     song.playback ??
     song.preview ??
@@ -1955,27 +1980,13 @@ export default function SongPage() {
     async function preparePlayback() {
       if (!musicReady) return;
 
-      let playbackUrl = song.playback ?? song.preview;
-      let playbackSource: "itunes" | "soundcloud" =
+      let playbackUrl = song.playback ?? song.preview ?? null;
+      let playbackSource: "soundcloud" | "itunes" | "local" =
         song.source === "soundcloud" ? "soundcloud" : "itunes";
-      let playbackSourceUrl = song.sourceUrl;
+      let playbackSourceUrl = song.sourceUrl ?? null;
       let artwork = song.artwork;
       let album = song.album;
 
-      if (!playbackUrl) {
-        const resolved = await resolveApplePreview(song.title, song.artist);
-        if (resolved) {
-          playbackUrl = resolved.previewUrl;
-          playbackSource = "itunes";
-          playbackSourceUrl = null;
-          artwork = resolved.artworkUrl ?? artwork;
-          album = resolved.albumName ?? album;
-        }
-      }
-
-      // Keep the working Apple resolver first. If Apple blocks the browser
-      // catalog request, fall back to Vesper's existing catalog route so a
-      // playable SoundCloud/iTunes result can still become the active signal.
       if (!playbackUrl) {
         try {
           const response = await fetch(
@@ -1992,56 +2003,93 @@ export default function SongPage() {
                 artworkUrl: string | null;
                 previewUrl: string | null;
                 playback?: {
-                  provider: "soundcloud" | "itunes" | "local";
-                  url: string | null;
+                  provider?: "soundcloud" | "itunes" | "local";
+                  url?: string | null;
+                  sourceUrl?: string | null;
+                };
+              }>;
+              results?: Array<{
+                title: string;
+                artistName: string;
+                albumName: string | null;
+                artworkUrl: string | null;
+                previewUrl: string | null;
+                playback?: {
+                  provider?: "soundcloud" | "itunes" | "local";
+                  url?: string | null;
                   sourceUrl?: string | null;
                 };
               }>;
             };
 
-            const normalize = (value: string) =>
+            const candidates = Array.isArray(data.songs)
+              ? data.songs
+              : Array.isArray(data.results)
+                ? data.results
+                : [];
+
+            const normalized = (value: string) =>
               value
                 .normalize("NFKD")
-                .replace(/[\u0300-\u036f]/g, "")
+                .replace(/[\\u0300-\\u036f]/g, "")
                 .toLowerCase()
-                .replace(/\b(feat\.?|ft\.?)\b.*$/i, "")
+                .replace(/\\b(feat\\.?|ft\\.?)\\b.*$/i, "")
                 .replace(/[^a-z0-9]+/g, " ")
                 .trim()
-                .replace(/\s+/g, " ");
+                .replace(/\\s+/g, " ");
 
-            const titleKey = normalize(song.title);
-            const artistKey = normalize(song.artist);
-
-            const match = (data.songs ?? [])
-              .map((candidate) => {
-                const candidateTitle = normalize(candidate.title);
-                const candidateArtist = normalize(candidate.artistName);
-                const exactTitle = candidateTitle === titleKey;
-                const exactArtist = candidateArtist === artistKey;
-                const titleContains = candidateTitle.includes(titleKey) || titleKey.includes(candidateTitle);
-                const artistContains = candidateArtist.includes(artistKey) || artistKey.includes(candidateArtist);
-                const score = exactTitle && exactArtist ? 100 : exactTitle && artistContains ? 90 : titleContains && exactArtist ? 80 : titleContains && artistContains ? 70 : exactTitle ? 60 : 0;
-                return { candidate, score };
-              })
-              .filter((entry) => entry.score > 0 && Boolean(entry.candidate.playback?.url ?? entry.candidate.previewUrl))
-              .sort((a, b) => b.score - a.score || Number(Boolean(b.candidate.artworkUrl)) - Number(Boolean(a.candidate.artworkUrl)))[0]?.candidate;
+            const titleKey = normalized(song.title);
+            const artistKey = normalized(song.artist);
+            const match = candidates.find(
+              (candidate) =>
+                normalized(candidate.title) === titleKey &&
+                normalized(candidate.artistName) === artistKey &&
+                Boolean(candidate.playback?.url ?? candidate.previewUrl)
+            ) ?? candidates.find(
+              (candidate) =>
+                normalized(candidate.title) === titleKey &&
+                Boolean(candidate.playback?.url ?? candidate.previewUrl)
+            );
 
             if (match) {
-              playbackUrl = match.playback?.url ?? match.previewUrl;
-              playbackSource = match.playback?.provider === "soundcloud" ? "soundcloud" : "itunes";
+              playbackUrl = match.playback?.url ?? match.previewUrl ?? null;
+              playbackSource =
+                match.playback?.provider === "soundcloud"
+                  ? "soundcloud"
+                  : match.playback?.provider === "local"
+                    ? "local"
+                    : "itunes";
               playbackSourceUrl = match.playback?.sourceUrl ?? null;
               artwork = match.artworkUrl ?? artwork;
               album = match.albumName ?? album;
             }
           }
         } catch (error) {
-          console.warn("Unable to resolve fallback playback:", error);
+          console.warn("Vesper playback catalog lookup failed:", error);
+        }
+      }
+
+      // Last.fm is discovery metadata, not an audio host. If discovery found
+      // the song but the server could not obtain an Apple preview, use the
+      // browser-side Apple catalog path that can still return a preview for
+      // this exact song when the server path is being refused.
+      if (!playbackUrl) {
+        const apple = await searchAppleDirectPreview(song.title, song.artist);
+        if (apple) {
+          playbackUrl = apple.previewUrl;
+          playbackSource = "itunes";
+          playbackSourceUrl = null;
+          artwork = apple.artworkUrl ?? artwork;
+          album = apple.albumName ?? album;
         }
       }
 
       if (cancelled || !playbackUrl) return;
 
-      if (activeSong?.id === song.id && activeSong.audioUrl === playbackUrl) {
+      if (
+        activeSong?.id === song.id &&
+        activeSong.audioUrl === playbackUrl
+      ) {
         return;
       }
 
@@ -2079,98 +2127,96 @@ export default function SongPage() {
   ]);
 
   useEffect(() => {
-    try {
-      const stored = window.sessionStorage.getItem("vesper-journey-v1");
-      const parsed = stored ? JSON.parse(stored) : [];
-      if (Array.isArray(parsed)) {
-        setJourney(parsed.slice(-12));
-      }
-    } catch {
-      setJourney([]);
-    }
-  }, []);
-
-  useEffect(() => {
-    const stop: JourneyStop = {
-      id: song.id,
-      title: song.title,
-      artist: song.artist,
-      album: song.album ?? null,
-      artwork: song.artwork ?? null,
-      preview: song.preview ?? null,
-    };
-
-    setJourney((current) => {
-      const next = [
-        ...current.filter((item) => item.id !== stop.id),
-        stop,
-      ].slice(-12);
-
-      try {
-        window.sessionStorage.setItem(
-          "vesper-journey-v1",
-          JSON.stringify(next)
-        );
-      } catch {
-        // Session storage can be unavailable in private browsing.
-      }
-
-      return next;
-    });
-  }, [
-    song.album,
-    song.artist,
-    song.artwork,
-    song.id,
-    song.preview,
-    song.title,
-  ]);
-
-  const clearJourney = () => {
-    setJourneyClearing(true);
-
-    window.setTimeout(() => {
-      setJourney([]);
-      setJourneyClearing(false);
-
-      try {
-        window.sessionStorage.removeItem("vesper-journey-v1");
-      } catch {
-        // Ignore storage failures.
-      }
-    }, 420);
-  };
-
-  useEffect(() => {
     let cancelled = false;
 
     async function resolveUniverse() {
-      setSelectedNodeId(null);
-      setUniverse(null);
+      if (!cancelled) {
+        setSelectedNodeId(null);
+        // A new song should always get a fresh universe. Do not leave the
+        // previous song's graph visible while the next universe resolves.
+        setUniverse(null);
+      }
 
       try {
         const query = new URLSearchParams({
           title: song.title,
           artist: song.artist,
+          // Force a fresh client request whenever a graph node becomes the
+          // new center of the universe.
+          _vesperRefresh: String(Date.now()),
         });
 
-        if (song.album) query.set("album", song.album);
-
-        const response = await fetch(
-          `/api/music/song/${encodeURIComponent(song.id)}?${query.toString()}`,
-          { cache: "force-cache" }
-        );
-
-        if (!response.ok) {
-          throw new Error(`Universe request failed with ${response.status}`);
+        if (song.album) {
+          query.set("album", song.album);
         }
 
-        const data = (await response.json()) as UniverseData;
+        const requestUniverse = async (attempt: number) => {
+          query.set(
+            "_vesperRefresh",
+            `${Date.now()}-${attempt}`
+          );
 
-        if (!cancelled) setUniverse(data);
+          return fetch(
+            `/api/music/song/${encodeURIComponent(
+              song.id
+            )}?${query.toString()}`,
+            { cache: "no-store" }
+          );
+        };
+
+        let response = await requestUniverse(0);
+
+        if (!response.ok) {
+          throw new Error(
+            `Universe request failed with ${response.status}`
+          );
+        }
+
+        let data =
+          (await response.json()) as UniverseData;
+
+        // A newly clicked node can race a cold upstream MusicBrainz/Last.fm
+        // lookup. If the first fresh response resolves to no satellite nodes,
+        // retry once with a completely new cache key before showing an empty
+        // universe. This keeps navigation deterministic without requiring a
+        // manual browser refresh.
+        const hasSatelliteNodes =
+          (data.graph?.nodes ?? []).some(
+            (node) =>
+              node.type === "song" &&
+              node.id !== data.graph?.center?.id
+          );
+
+        if (!hasSatelliteNodes) {
+          const retryResponse = await requestUniverse(1);
+          if (retryResponse.ok) {
+            const retryData =
+              (await retryResponse.json()) as UniverseData;
+            const retryHasSatelliteNodes =
+              (retryData.graph?.nodes ?? []).some(
+                (node) =>
+                  node.type === "song" &&
+                  node.id !== retryData.graph?.center?.id
+              );
+
+            if (retryHasSatelliteNodes) {
+              data = retryData;
+            }
+          }
+        }
+
+        if (!cancelled) {
+          setUniverse(data);
+        }
       } catch (error) {
-        console.error("Unable to resolve song universe:", error);
-        if (!cancelled) setUniverse(null);
+        console.error(
+          "Unable to resolve song universe:",
+          error
+        );
+
+        if (!cancelled) {
+          setUniverse(null);
+        }
       }
     }
 
@@ -2179,7 +2225,12 @@ export default function SongPage() {
     return () => {
       cancelled = true;
     };
-  }, [song.album, song.artist, song.id, song.title]);
+  }, [
+    song.album,
+    song.artist,
+    song.id,
+    song.title,
+  ]);
 
   useEffect(() => {
     const element = universeRef.current;
@@ -2247,7 +2298,7 @@ export default function SongPage() {
     universe?.graph?.nodes?.length
       ? getGraphPoints(
           universe.graph.nodes,
-          universe.graph.center.id
+          universe.graph.center?.id ?? song.id
         )
       : [];
 
@@ -2260,6 +2311,16 @@ export default function SongPage() {
         edge.source === centerId ||
         edge.target === centerId
     ) ?? [];
+
+  const selectedNode = selectedNodeId
+    ? universe?.graph?.nodes?.find((node) => node.id === selectedNodeId) ?? null
+    : null;
+
+  const selectedEdge = selectedNodeId
+    ? visibleEdges.find(
+        (edge) => edge.source === selectedNodeId || edge.target === selectedNodeId
+      ) ?? null
+    : null;
 
   return (
     <>
@@ -2413,10 +2474,10 @@ export default function SongPage() {
               ))}
             </div>
 
-            {(activeSong?.id === song.id ? activeSong.artwork : null) || song.artwork ? (
+            {song.artwork ? (
               <img
                 className="song-art"
-                src={(activeSong?.id === song.id ? activeSong.artwork : null) || song.artwork || ""}
+                src={song.artwork}
                 alt=""
               />
             ) : (
@@ -2434,67 +2495,6 @@ export default function SongPage() {
             </div>
           </div>
         </section>
-
-        {journey.length > 0 && (
-          <section
-            key={song.id}
-            className={`journey-strip ${journeyClearing ? "is-clearing" : ""}`}
-            aria-label="Your musical journey"
-          >
-            <div className="journey-topline">
-              <span className="journey-label">YOUR PATH</span>
-              {journey.length > 1 && (
-                <button
-                  type="button"
-                  className="journey-clear"
-                  onClick={clearJourney}
-                >
-                  CLEAR PATH
-                </button>
-              )}
-            </div>
-
-            <div className="journey-path">
-              {journey.map((stop, index) => {
-                const params = new URLSearchParams({
-                  title: stop.title,
-                  artist: stop.artist,
-                });
-
-                if (stop.album) params.set("album", stop.album);
-                if (stop.artwork) params.set("artwork", stop.artwork);
-                if (stop.preview) params.set("preview", stop.preview);
-
-                const current = stop.id === song.id;
-
-                return (
-                  <React.Fragment key={`${stop.id}-${index}`}>
-                    {index > 0 && (
-                      <span className="journey-arrow" aria-hidden="true">
-                        →
-                      </span>
-                    )}
-                    <Link
-                      href={`/song/${encodeURIComponent(stop.id)}?${params.toString()}`}
-                      className={`journey-stop ${current ? "current" : ""}`}
-                      aria-current={current ? "page" : undefined}
-                    >
-                      <span className="journey-stop-dot" />
-                      <span className="journey-stop-copy">
-                        <span className="journey-stop-title">
-                          {stop.title}
-                        </span>
-                        <span className="journey-stop-artist">
-                          {stop.artist}
-                        </span>
-                      </span>
-                    </Link>
-                  </React.Fragment>
-                );
-              })}
-            </div>
-          </section>
-        )}
 
         <section
           ref={universeRef}
@@ -2517,20 +2517,65 @@ export default function SongPage() {
             </p>
           </header>
 
+          {journey.length > 0 && (
+            <div className="journey-strip" aria-label="Your Vesper journey">
+              <div className="journey-heading">
+                <span className="journey-label">YOUR PATH</span>
+                {journey.length > 1 && (
+                  <button
+                    type="button"
+                    className="journey-clear"
+                    onClick={clearJourney}
+                  >
+                    CLEAR PATH
+                  </button>
+                )}
+              </div>
+
+              <div className="journey-path">
+                {journey.map((item, index) => {
+                  const itemParams = new URLSearchParams({
+                    title: item.title,
+                    artist: item.artist,
+                  });
+
+                  if (item.album) itemParams.set("album", item.album);
+                  if (item.artwork) itemParams.set("artwork", item.artwork);
+                  if (item.preview) itemParams.set("preview", item.preview);
+
+                  const itemHref = `/song/${encodeURIComponent(item.id)}?${itemParams.toString()}`;
+                  const isCurrent = item.id === song.id;
+
+                  return (
+                    <Fragment key={`${item.id}-${index}`}>
+                      {index > 0 && <span className="journey-arrow" aria-hidden="true">→</span>}
+                      <Link
+                        href={itemHref}
+                        className={`journey-item ${isCurrent ? "current" : ""}`}
+                        aria-current={isCurrent ? "page" : undefined}
+                      >
+                        <span className="journey-dot" />
+                        <span className="journey-item-copy">
+                          <span className="journey-item-title">{item.title}</span>
+                          <span className="journey-item-artist">{item.artist}</span>
+                        </span>
+                      </Link>
+                    </Fragment>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           <div
             className={`song-universe-stage ${
-              graphPoints.length
+              universe?.graph?.nodes?.length
                 ? "is-resolved"
                 : ""
             }`}
           >
-            {graphPoints.length ? (
+            {universe?.graph?.nodes?.length ? (
               <div className="universe-graph-content">
-                {graphPoints.length < 3 && (
-                  <div className="universe-sparse-badge">
-                    A SMALL CONSTELLATION · {graphPoints.length} {graphPoints.length === 1 ? "CONNECTION" : "CONNECTIONS"}
-                  </div>
-                )}
                 <svg
                   className="universe-chart"
                   viewBox="0 0 100 100"
@@ -2562,7 +2607,7 @@ export default function SongPage() {
                       return (
                         <line
                           key={`${edge.source}-${edge.target}`}
-                          className={`universe-line ${selectedNodeId === point.node.id ? "is-selected" : ""}`}
+                          className={`universe-line ${selectedNodeId && point.node.id === selectedNodeId ? "is-selected" : ""}`}
                           x1="50"
                           y1="50"
                           x2={point.x}
@@ -2580,7 +2625,7 @@ export default function SongPage() {
                     </div>
 
                     <div className="universe-center-title">
-                      {universe.song.title}
+                      {universe?.song?.title ?? song.title}
                     </div>
 
                     <div className="universe-center-artist">
@@ -2630,7 +2675,7 @@ export default function SongPage() {
                           className="universe-node-link"
                           aria-label={`Open ${point.node.label} by ${point.node.artist ?? "Unknown artist"}`}
                         >
-                          <span className="universe-node-star" aria-hidden="true" />
+                          <div className="universe-node-dot" />
 
                           <div className="universe-node-label">
                             {point.node.label}
@@ -2640,12 +2685,6 @@ export default function SongPage() {
                             {point.node.artist ?? "Unknown artist"}
                           </div>
 
-                          {typeof point.node.lastFmMatch === "number" && (
-                            <div className="universe-node-similarity">
-                              {Math.round(point.node.lastFmMatch * 100)}% SIMILAR
-                            </div>
-                          )}
-
                           {point.node.genres &&
                             point.node.genres.length > 0 && (
                               <div className="universe-node-genres">
@@ -2654,96 +2693,41 @@ export default function SongPage() {
                                   .join(" · ")}
                               </div>
                             )}
+
+                          {typeof point.node.lastFmMatch === "number" && (
+                            <div className="universe-node-similarity">
+                              {Math.round(point.node.lastFmMatch * 100)}% SIMILAR
+                            </div>
+                          )}
                         </Link>
                       </div>
                     );
                   }
                 )}
 
-                {selectedNodeId && (() => {
-                  const selectedNode = universe.graph.nodes.find(
-                    (node) => node.id === selectedNodeId
-                  );
-                  const selectedEdge = universe.graph.edges.find(
-                    (edge) =>
-                      edge.source === selectedNodeId ||
-                      edge.target === selectedNodeId
-                  );
-
-                  if (!selectedNode || !selectedEdge) return null;
-
-                  return (
-                    <div className="universe-connection-detail" aria-live="polite">
-                      <div className="universe-connection-detail-label">
-                        WHY THIS SIGNAL
-                      </div>
-                      <div className="universe-connection-detail-title">
-                        {selectedNode.label}
-                      </div>
-                      <div className="universe-connection-detail-text">
-                        {selectedEdge.relationship}
-                      </div>
+                {selectedNode && selectedEdge && (
+                  <div className="universe-connection-detail" aria-live="polite">
+                    <div className="universe-connection-detail-label">
+                      WHY THIS SIGNAL
                     </div>
-                  );
-                })()}
-
-              </div>
-            ) : universe ? (
-              <div className="universe-empty">
-                <div className="universe-quiet-orbit" aria-hidden="true" />
-
-                <div className="universe-quiet-bubbles" aria-hidden="true">
-                  <span className="universe-quiet-bubble">✦</span>
-                  <span className="universe-quiet-bubble">·</span>
-                  <span className="universe-quiet-bubble">✧</span>
-                  <span className="universe-quiet-bubble">·</span>
-                  <span className="universe-quiet-bubble">✦</span>
-                  <span className="universe-quiet-bubble">·</span>
-                  <span className="universe-quiet-bubble">✧</span>
-                </div>
-
-                <div className="universe-quiet-core">
-                  <div className="universe-empty-eyebrow">THE UNIVERSE IS QUIET</div>
-                  <div className="universe-empty-title">
-                    This signal is still finding its stars.
+                    <div className="universe-connection-detail-text">
+                      {selectedEdge.relationship}
+                    </div>
                   </div>
-                  <p className="universe-empty-copy">
-                    Vesper only shows connections that are actually established in its music data.
-                    Newer, obscure, or less-documented songs may have fewer known connections.
-                    We will not fill the sky with random songs just to make it look full.
-                  </p>
-                </div>
+                )}
+
               </div>
             ) : (
               <div className="universe-empty">
-                <div className="universe-quiet-orbit" aria-hidden="true" />
-                <div className="universe-quiet-bubbles" aria-hidden="true">
-                  <span className="universe-quiet-bubble">✦</span>
-                  <span className="universe-quiet-bubble">·</span>
-                  <span className="universe-quiet-bubble">✧</span>
-                  <span className="universe-quiet-bubble">·</span>
-                  <span className="universe-quiet-bubble">✦</span>
-                  <span className="universe-quiet-bubble">·</span>
-                  <span className="universe-quiet-bubble">✧</span>
-                </div>
-                <div className="universe-quiet-core">
-                  <div className="universe-empty-eyebrow">READING THE SIGNAL</div>
-                  <div className="universe-empty-title">
-                    The universe is still forming.
-                  </div>
-                </div>
+                The universe is still forming.
               </div>
             )}
           </div>
 
           <div className="universe-source">
-            {graphPoints.length >= 8
-              ? "Full constellation mapped through Last.fm"
-              : graphPoints.length >= 3
-                ? "Constellation mapped through Last.fm"
-                : graphPoints.length > 0
-                  ? "A small constellation mapped through Last.fm"
-                  : "Connections appear when Vesper has enough signal to map them"}
+            {universe?.graph?.nodes?.length
+              ? "Music universe resolved through MusicBrainz"
+              : "Reading the music universe..."}
           </div>
         </section>
       </main>
