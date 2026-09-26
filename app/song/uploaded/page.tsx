@@ -1,9 +1,8 @@
-"use client";
+ "use client";
 
-import { useEffect, useMemo } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useMusic } from "../../components/MusicProvider";
 
 const zodiacSigns = [
   "♈︎", "♉︎", "♊︎", "♋︎", "♌︎", "♍︎",
@@ -56,145 +55,59 @@ const styles = `
 @media(prefers-reduced-motion:reduce){.uploaded-page *{animation-duration:.01ms!important;animation-iteration-count:1!important}}
 `;
 
-function formatTime(value: number) {
-  if (!Number.isFinite(value)) return "00 : 00";
-  return `${Math.floor(value / 60)
-    .toString()
-    .padStart(2, "0")} : ${Math.floor(value % 60)
-    .toString()
-    .padStart(2, "0")}`;
+function formatTime(value:number){ return `${Math.floor(value/60).toString().padStart(2,"0")} : ${Math.floor(value%60).toString().padStart(2,"0")}`; }
+
+function UploadedSongPage(){
+  const searchParams=useSearchParams();
+  const audioRef=useRef<HTMLAudioElement|null>(null);
+  const [fileName,setFileName]=useState("Your recording");
+  const [playing,setPlaying]=useState(false);
+  const [current,setCurrent]=useState(0);
+  const [duration,setDuration]=useState(0);
+  const [error,setError]=useState("");
+
+  useEffect(()=>{
+    const id=searchParams.get("id");
+    if(!id) { setError("No uploaded signal was found."); return; }
+    const raw=sessionStorage.getItem(`vesper-upload:${id}`);
+    if(!raw){ setError("This uploaded signal is no longer available. Return to Vesper and upload it again."); return; }
+    try {
+      const parsed=JSON.parse(raw) as {name:string;dataUrl:string};
+      setFileName(parsed.name || "Your recording");
+      const audio=audioRef.current;
+      if(audio){ audio.src=parsed.dataUrl; audio.load(); }
+    } catch { setError("Vesper could not read that uploaded signal."); }
+  },[searchParams]);
+
+  useEffect(()=>()=> {
+    const id=searchParams.get("id");
+    if(id) sessionStorage.removeItem(`vesper-upload:${id}`);
+  },[searchParams]);
+
+  function toggle(){ const audio=audioRef.current; if(!audio)return; if(audio.paused){audio.play().then(()=>setPlaying(true)).catch(()=>setPlaying(false));}else{audio.pause();setPlaying(false);} }
+  const progress=duration?(current/duration)*100:0;
+
+  return <><style>{styles}</style><main className="uploaded-page">
+    <div className="uploaded-stars">{Array.from({length:60}).map((_,i)=><span key={i} style={{left:`${(i*41.7)%100}%`,top:`${(i*67.3)%100}%`,animationDelay:`-${(i%7)*.55}s`}} />)}</div>
+    <nav className="uploaded-nav"><Link className="uploaded-back" href="/">← RETURN TO VESPER</Link><span className="uploaded-mark">LOCAL SIGNAL</span></nav>
+    <section className="uploaded-stage">
+      <div className="uploaded-copy">
+        <span className="uploaded-eyebrow">01 / THE SIGNAL</span>
+        <h1 className="uploaded-title">{fileName.replace(/\.[^/.]+$/," ")}</h1>
+        <div className="uploaded-meta">Your recording</div>
+        <div className="uploaded-file">PLAYING FROM THIS DEVICE</div>
+        {error ? <p className="uploaded-error">{error}</p> : <div className="uploaded-player">
+          <div className="uploaded-progress"><div className="uploaded-progress-fill" style={{width:`${progress}%`}} /></div>
+          <div className="uploaded-controls"><button className="uploaded-play" type="button" onClick={toggle}>{playing?"Ⅱ":"▶"}</button><span className="uploaded-time">{formatTime(current)} / {formatTime(duration)}</span></div>
+          <div className="uploaded-note">FULL LOCAL AUDIO · NOTHING LEAVES THIS DEVICE</div>
+        </div>}
+        <audio ref={audioRef} onLoadedMetadata={e=>setDuration(e.currentTarget.duration||0)} onTimeUpdate={e=>setCurrent(e.currentTarget.currentTime)} onPlay={()=>setPlaying(true)} onPause={()=>setPlaying(false)} onEnded={()=>setPlaying(false)} autoPlay />
+      </div>
+      <div className="uploaded-art-field"><div className="uploaded-glow"/><div className="uploaded-ring one"/><div className="uploaded-ring two"/><div className="uploaded-ring three"/><div className="uploaded-ring four"/><div className="uploaded-zodiac">{zodiacSigns.map(g=><span key={g}>{g}</span>)}</div><div className="uploaded-disc"/></div>
+    </section>
+  </main></>;
 }
 
-export default function UploadedSongPage() {
-  const searchParams = useSearchParams();
-  const {
-    song: activeSong,
-    playing,
-    currentTime,
-    duration,
-    autoplayBlocked,
-    setSong,
-    togglePlayback,
-  } = useMusic();
-
-  const fileName = searchParams.get("name") ?? "Your recording";
-  const audioUrl = searchParams.get("audio") ?? "";
-  const signalId = searchParams.get("id") ?? `local-${fileName}`;
-
-  const localSong = useMemo(
-    () => ({
-      id: signalId,
-      title: fileName.replace(/\.[^/.]+$/, ""),
-      artist: "Your recording",
-      audioUrl,
-    }),
-    [audioUrl, fileName, signalId]
-  );
-
-  useEffect(() => {
-    if (!audioUrl) return;
-
-    if (activeSong?.id === localSong.id && activeSong.audioUrl === audioUrl) {
-      return;
-    }
-
-    setSong({
-      id: localSong.id,
-      title: localSong.title,
-      artist: localSong.artist,
-      audioUrl: localSong.audioUrl,
-      isLocal: true,
-    });
-  }, [activeSong?.audioUrl, activeSong?.id, audioUrl, localSong, setSong]);
-
-  const isActive = activeSong?.id === localSong.id;
-  const progress = duration ? (currentTime / duration) * 100 : 0;
-
-  return (
-    <>
-      <style>{styles}</style>
-      <main className="uploaded-page">
-        <div className="uploaded-stars">
-          {Array.from({ length: 60 }).map((_, i) => (
-            <span
-              key={i}
-              style={{
-                left: `${(i * 41.7) % 100}%`,
-                top: `${(i * 67.3) % 100}%`,
-                animationDelay: `-${(i % 7) * 0.55}s`,
-              }}
-            />
-          ))}
-        </div>
-
-        <nav className="uploaded-nav">
-          <Link className="uploaded-back" href="/">
-            ← RETURN TO VESPER
-          </Link>
-          <span className="uploaded-mark">LOCAL SIGNAL</span>
-        </nav>
-
-        <section className="uploaded-stage">
-          <div className="uploaded-copy">
-            <span className="uploaded-eyebrow">01 / THE SIGNAL</span>
-            <h1 className="uploaded-title">
-              {localSong.title}
-            </h1>
-            <div className="uploaded-meta">Your recording</div>
-            <div className="uploaded-file">PLAYING FROM THIS DEVICE</div>
-
-            {!audioUrl ? (
-              <p className="uploaded-error">
-                No uploaded signal was found. Return to Vesper and upload an
-                audio file again.
-              </p>
-            ) : (
-              <div className="uploaded-player">
-                <div className="uploaded-progress">
-                  <div
-                    className="uploaded-progress-fill"
-                    style={{ width: `${isActive ? progress : 0}%` }}
-                  />
-                </div>
-
-                <div className="uploaded-controls">
-                  <button
-                    className="uploaded-play"
-                    type="button"
-                    onClick={togglePlayback}
-                    disabled={!isActive}
-                  >
-                    {playing && isActive ? "Ⅱ" : "▶"}
-                  </button>
-                  <span className="uploaded-time">
-                    {formatTime(isActive ? currentTime : 0)} / {formatTime(isActive ? duration : 0)}
-                  </span>
-                </div>
-
-                <div className="uploaded-note">
-                  {isActive && autoplayBlocked
-                    ? "PRESS PLAY TO ENTER THE SIGNAL"
-                    : "FULL LOCAL AUDIO · NOTHING LEAVES THIS DEVICE"}
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="uploaded-art-field">
-            <div className="uploaded-glow" />
-            <div className="uploaded-ring one" />
-            <div className="uploaded-ring two" />
-            <div className="uploaded-ring three" />
-            <div className="uploaded-ring four" />
-            <div className="uploaded-zodiac">
-              {zodiacSigns.map((glyph) => (
-                <span key={glyph}>{glyph}</span>
-              ))}
-            </div>
-            <div className="uploaded-disc" />
-          </div>
-        </section>
-      </main>
-    </>
-  );
+export default function UploadedSongPageWithSuspense(){
+  return <Suspense fallback={null}><UploadedSongPage /></Suspense>;
 }

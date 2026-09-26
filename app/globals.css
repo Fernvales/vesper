@@ -2499,3 +2499,369 @@ em {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* =========================================================
+   VESPER — QUIET UNIVERSE + SCROLLBAR POLISH
+   Does not require changes to song page
+========================================================= */
+
+/* ---------------------------------------------------------
+   GLOBAL SCROLLBAR
+--------------------------------------------------------- */
+
+html {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(203, 183, 140, 0.28) transparent;
+}
+
+body {
+  scrollbar-gutter: stable;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(203, 183, 140, 0.22);
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(203, 183, 140, 0.42);
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* ---------------------------------------------------------
+   QUIET UNIVERSE
+--------------------------------------------------------- */
+
+.universe-empty {
+  position: relative !important;
+  min-height: 420px !important;
+  display: grid !important;
+  place-items: center !important;
+  overflow: hidden !important;
+  isolation: isolate;
+  animation: vesper-quiet-arrive 900ms ease both !important;
+}
+
+/* faint orbital atmosphere */
+
+.universe-quiet-orbit {
+  position: absolute !important;
+  left: 50% !important;
+  top: 50% !important;
+  width: min(520px, 72vw) !important;
+  height: min(520px, 72vw) !important;
+  transform: translate(-50%, -50%) !important;
+  border: 1px solid rgba(203, 183, 140, 0.055) !important;
+  border-radius: 50% !important;
+  opacity: 0.7 !important;
+  animation: vesper-quiet-orbit 18s linear infinite !important;
+  pointer-events: none !important;
+}
+
+.universe-quiet-orbit::before,
+.universe-quiet-orbit::after {
+  content: "" !important;
+  position: absolute !important;
+  left: 50% !important;
+  top: 50% !important;
+  border-radius: 50% !important;
+  pointer-events: none !important;
+}
+
+.universe-quiet-orbit::before {
+  width: 72% !important;
+  height: 72% !important;
+  transform: translate(-50%, -50%) !important;
+  border: 1px solid rgba(238, 233, 223, 0.025) !important;
+}
+
+.universe-quiet-orbit::after {
+  width: 4px !important;
+  height: 4px !important;
+  left: 50% !important;
+  top: 0 !important;
+  transform: translate(-50%, -50%) !important;
+  background: rgba(203, 183, 140, 0.7) !important;
+  box-shadow: 0 0 14px rgba(203, 183, 140, 0.35) !important;
+}
+
+/* floating little stars */
+
+.universe-quiet-bubbles {
+  position: absolute !important;
+  inset: 0 !important;
+  pointer-events: none !important;
+  z-index: 1 !important;
+}
+
+.universe-quiet-bubble {
+  position: absolute !important;
+  left: 50% !important;
+  top: 50% !important;
+  display: block !important;
+  color: rgba(203, 183, 140, 0.7) !important;
+  font-family: Georgia, serif !important;
+  font-size: 13px !important;
+  line-height: 1 !important;
+  opacity: 0.35 !important;
+  text-shadow: 0 0 12px rgba(203, 183, 140, 0.25) !important;
+  animation: vesper-quiet-star 4.5s ease-in-out infinite !important;
+}
+
+.universe-quiet-bubble:nth-child(1) {
+  margin-left: -210px !important;
+  margin-top: -105px !important;
+  animation-delay: -1.1s !important;
+}
+
+.universe-quiet-bubble:nth-child(2) {
+  margin-left: 170px !important;
+  margin-top: -125px !important;
+  animation-delay: -2.4s !important;
+}
+
+.universe-quiet-bubble:nth-child(3) {
+  margin-left: 225px !important;
+  margin-top: 65px !important;
+  animation-delay: -0.7s !important;
+}
+
+.universe-quiet-bubble:nth-child(4) {
+  margin-left: -185px !important;
+  margin-top: 125px !important;
+  animation-delay: -3.2s !important;
+}
+
+.universe-quiet-bubble:nth-child(5) {
+  margin-left: 95px !important;
+  margin-top: 155px !important;
+  animation-delay: -1.8s !important;
+}
+
+.universe-quiet-bubble:nth-child(6) {
+  margin-left: -90px !important;
+  margin-top: -165px !important;
+  animation-delay: -3.7s !important;
+}
+
+.universe-quiet-bubble:nth-child(7) {
+  margin-left: 35px !important;
+  margin-top: 195px !important;
+  animation-delay: -2.9s !important;
+}
+
+/* actual quiet message */
+
+.universe-quiet-core {
+  position: relative !important;
+  z-index: 3 !important;
+  width: min(520px, calc(100% - 40px)) !important;
+  padding: 46px 42px !important;
+  text-align: center !important;
+  border: 1px solid rgba(203, 183, 140, 0.12) !important;
+  border-radius: 28px !important;
+  background:
+    radial-gradient(
+      circle at 50% 0%,
+      rgba(203, 183, 140, 0.055),
+      transparent 62%
+    ),
+    rgba(8, 9, 9, 0.72) !important;
+  box-shadow:
+    0 0 70px rgba(203, 183, 140, 0.035),
+    inset 0 0 50px rgba(238, 233, 223, 0.012) !important;
+  backdrop-filter: blur(18px) !important;
+  -webkit-backdrop-filter: blur(18px) !important;
+  animation: vesper-quiet-breathe 5s ease-in-out infinite !important;
+}
+
+.universe-quiet-core::before,
+.universe-quiet-core::after {
+  content: "" !important;
+  position: absolute !important;
+  width: 4px !important;
+  height: 4px !important;
+  border-radius: 50% !important;
+  pointer-events: none !important;
+  animation: vesper-quiet-twinkle 3.5s ease-in-out infinite !important;
+}
+
+.universe-quiet-core::before {
+  left: 18% !important;
+  top: 24% !important;
+  background: var(--gold, #cdb76c) !important;
+  box-shadow: 0 0 15px rgba(203, 183, 140, 0.45) !important;
+}
+
+.universe-quiet-core::after {
+  right: 18% !important;
+  bottom: 22% !important;
+  width: 3px !important;
+  height: 3px !important;
+  background: rgba(238, 233, 223, 0.65) !important;
+  box-shadow: 0 0 12px rgba(238, 233, 223, 0.25) !important;
+  animation-delay: 1s !important;
+}
+
+.universe-empty-eyebrow {
+  color: var(--gold, #cdb76c) !important;
+  font-size: 8px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.22em !important;
+  text-transform: uppercase !important;
+}
+
+.universe-empty-title {
+  margin-top: 12px !important;
+  color: var(--ink, #eee9df) !important;
+  font-family: var(--font-cormorant), Georgia, serif !important;
+  font-size: 30px !important;
+  line-height: 1.05 !important;
+  letter-spacing: -0.02em !important;
+  text-transform: none !important;
+}
+
+.universe-empty-copy {
+  max-width: 430px !important;
+  margin: 16px auto 0 !important;
+  color: #74776f !important;
+  font-size: 10px !important;
+  line-height: 1.7 !important;
+  letter-spacing: 0.035em !important;
+  text-transform: none !important;
+}
+
+/* ---------------------------------------------------------
+   ANIMATION
+--------------------------------------------------------- */
+
+@keyframes vesper-quiet-arrive {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes vesper-quiet-breathe {
+  0%,
+  100% {
+    transform: translateY(0);
+    box-shadow:
+      0 0 70px rgba(203, 183, 140, 0.035),
+      inset 0 0 50px rgba(238, 233, 223, 0.012);
+  }
+
+  50% {
+    transform: translateY(-5px);
+    box-shadow:
+      0 0 90px rgba(203, 183, 140, 0.065),
+      inset 0 0 60px rgba(238, 233, 223, 0.018);
+  }
+}
+
+@keyframes vesper-quiet-orbit {
+  from {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+@keyframes vesper-quiet-star {
+  0%,
+  100% {
+    opacity: 0.2;
+    transform: translate3d(0, 0, 0) scale(0.8);
+  }
+
+  50% {
+    opacity: 0.85;
+    transform: translate3d(8px, -12px, 0) scale(1.15);
+  }
+}
+
+@keyframes vesper-quiet-twinkle {
+  0%,
+  100% {
+    opacity: 0.25;
+    transform: scale(0.8);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.3);
+  }
+}
+
+@media (max-width: 700px) {
+  .universe-quiet-core {
+    width: calc(100% - 28px) !important;
+    padding: 40px 22px !important;
+  }
+
+  .universe-empty-title {
+    font-size: 24px !important;
+  }
+
+  .universe-empty-copy {
+    font-size: 9px !important;
+  }
+
+  .universe-quiet-bubble:nth-child(1) {
+    margin-left: -145px !important;
+  }
+
+  .universe-quiet-bubble:nth-child(2) {
+    margin-left: 120px !important;
+  }
+
+  .universe-quiet-bubble:nth-child(3) {
+    margin-left: 145px !important;
+  }
+
+  .universe-quiet-bubble:nth-child(4) {
+    margin-left: -150px !important;
+  }
+
+  .universe-quiet-bubble:nth-child(5) {
+    margin-left: 75px !important;
+  }
+
+  .universe-quiet-bubble:nth-child(6) {
+    margin-left: -70px !important;
+  }
+
+  .universe-quiet-bubble:nth-child(7) {
+    margin-left: 125px !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .universe-empty,
+  .universe-quiet-orbit,
+  .universe-quiet-bubble,
+  .universe-quiet-core,
+  .universe-quiet-core::before,
+  .universe-quiet-core::after {
+    animation: none !important;
+  }
+}
