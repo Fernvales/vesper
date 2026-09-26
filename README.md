@@ -26,7 +26,7 @@ Instead of moving through traditional recommendation lists, Vesper maps the musi
 
 > No random connections.
 > No fabricated recommendations.
-> Only relationships Vesper can actually establish from its music data.
+> Instead, maps relationships Vesper can actually establish from its music data.
 
 ---
 
@@ -133,6 +133,3 @@ app/
 
 <br>
 
-<sub>Built with music, curiosity, and a little bit of code.</sub>
-
-</div>
