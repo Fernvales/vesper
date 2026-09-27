@@ -1,11 +1,3 @@
-<div align="center">
-
-# V E S P E R
-
-### *Music, mapped differently.*
-
-<br>
-
 **An interactive music discovery experience built around connections, not lists.**
 
 <br>
