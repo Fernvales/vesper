@@ -54,10 +54,6 @@ Vesper combines music discovery with audio playback so finding something new doe
 
 ## The Experience
 
-<p align="center">
-  <img src="./public/screenshots/intro.PNG" alt="Vesper introduction" width="650">
-</p>
-
 Vesper was designed to feel less like a traditional web application and more like entering a different space.
 
 Dark celestial visuals, subtle motion, typography, orbital layouts, and restrained color create the visual language of the project.
