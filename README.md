@@ -1,127 +1,94 @@
-**An interactive music discovery experience built around connections, not lists.**
+# Vesper
 
-<br>
+### Music, mapped differently.
 
-[**Live Demo**](https://vesper-dev-steel.vercel.app/) · [**Repository**](https://github.com/Fernvales/Vesper)
+<p align="center">
+  <img src="./public/screenshots/home.PNG" alt="Vesper home screen" width="100%">
+</p>
 
-<br>
-
-</div>
-
----
-
-## ◌ About
-
-Vesper turns a song into a starting point.
-
-Instead of moving through traditional recommendation lists, Vesper maps the musical connections surrounding a track into an interactive constellation, letting you explore from one signal to the next.
-
-> No random connections.
-> No fabricated recommendations.
-> Instead, maps relationships Vesper can actually establish from its music data.
+<p align="center">
+  <i>An experimental music discovery experience built around the connections between songs.</i>
+</p>
 
 ---
 
-## ✦ The Experience
+## The idea
 
-**Search**
+Most music discovery experiences give you a list.
 
-Find a song through Vesper's music catalog.
+**Vesper gives you a universe.**
 
-**Signal**
+Search for a song and explore the music surrounding it through an interactive visual map. Instead of treating songs as isolated results, Vesper turns music discovery into an experience built around connections, exploration, and sound.
 
-Start with a track and let Vesper build its surrounding universe.
+The goal was simple:
 
-**Explore**
-
-Move through connected songs, artists, genres, and musical relationships.
-
-**Path**
-
-Every connection you follow becomes part of your journey through the universe.
+> **Make music discovery feel like exploration.**
 
 ---
 
-## ◇ Built With
+## The Universe
 
-| Technology         | Purpose                         |
-| ------------------ | ------------------------------- |
-| **Next.js**        | Application framework           |
-| **React**          | Interface                       |
-| **TypeScript**     | Type safety                     |
-| **Last.fm API**    | Music discovery & relationships |
-| **Apple / iTunes** | Music search & previews         |
-| **Deezer**         | Playback fallback               |
-| **Vercel**         | Deployment                      |
+<p align="center">
+  <img src="./public/screenshots/universe.PNG" alt="Vesper song universe" width="100%">
+</p>
+
+Every song becomes a center point.
+
+Vesper uses real music data to build a visual universe around the selected track, revealing related artists and songs as connected signals.
+
+Explore outward from one song and see where the music takes you.
 
 ---
 
-## ◌ Local Development
+## Follow the Signal
 
-Clone the repository:
+<p align="center">
+  <img src="./public/screenshots/signal.PNG" alt="Vesper song signal" width="100%">
+</p>
 
-```bash
-git clone https://github.com/Fernvales/Vesper.git
-cd Vesper
-npm install
-```
+Select a signal and listen while continuing to explore.
 
-Create `.env.local`:
+Vesper combines music discovery with audio playback so finding something new doesn't mean leaving the experience.
 
-```env
-LASTFM_API_KEY=your_api_key_here
-```
+---
 
-Start the development server:
+## The Experience
 
-```bash
-npm run dev
-```
+<p align="center">
+  <img src="./public/screenshots/intro.PNG" alt="Vesper introduction" width="650">
+</p>
 
-Then open:
+Vesper was designed to feel less like a traditional web application and more like entering a different space.
+
+Dark celestial visuals, subtle motion, typography, orbital layouts, and restrained color create the visual language of the project.
+
+---
+
+## How it works
 
 ```text
-http://localhost:3000
-```
-
----
-
-## ✦ Production
-
-Vesper is deployed with Vercel.
-
-Before deploying, configure the required environment variables in your Vercel project.
-
-To verify a production build locally:
-
-```bash
-npm run build
-```
-
----
-
-## ◇ Structure
-
-```text
-app/
-├── api/
-│   └── music/
-├── components/
-├── lib/
-├── song/
-│   ├── [trackId]/
-│   └── uploaded/
-├── globals.css
-└── page.tsx
-```
-
----
-
-<div align="center">
-
-### Vesper 1.0
-
-*search → play → explore → follow the signal*
-
-<br>
-
+                 SEARCH
+                    │
+                    ▼
+              ┌───────────┐
+              │   SONG    │
+              └─────┬─────┘
+                    │
+                    ▼
+           MUSIC + ARTIST DATA
+                    │
+                    ▼
+          ┌───────────────────┐
+          │     UNIVERSE      │
+          │                   │
+          │   ○      ○        │
+          │       ●           │
+          │  ○          ○     │
+          │       ○           │
+          └─────────┬─────────┘
+                    │
+                    ▼
+                EXPLORE
+                    │
+                    ▼
+             FOLLOW A SIGNAL
