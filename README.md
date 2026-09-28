@@ -66,29 +66,34 @@ Dark celestial visuals, subtle motion, typography, orbital layouts, and restrain
 
 ## How it works
 
+Vesper is built around several music APIs working together rather than relying on a single source.
+
 ```text
-                 SEARCH
-                    │
-                    ▼
-              ┌───────────┐
-              │   SONG    │
-              └─────┬─────┘
-                    │
-                    ▼
-           MUSIC + ARTIST DATA
-                    │
-                    ▼
-          ┌───────────────────┐
-          │     UNIVERSE      │
-          │                   │
-          │   ○      ○        │
-          │       ●           │
-          │  ○          ○     │
-          │       ○           │
-          └─────────┬─────────┘
-                    │
-                    ▼
-                EXPLORE
-                    │
-                    ▼
-             FOLLOW A SIGNAL
+                         SEARCH
+                           │
+                           ▼
+                    ┌─────────────┐
+                    │   iTunes    │
+                    │   / Deezer  │
+                    └──────┬──────┘
+                           │
+                           ▼
+                    SELECT A SONG
+                           │
+                           ▼
+                  ┌─────────────────┐
+                  │  SONG + ARTIST  │
+                  │     METADATA    │
+                  └────────┬────────┘
+                           │
+             ┌─────────────┼─────────────┐
+             ▼             ▼             ▼
+         Last.fm        Deezer       SoundCloud
+        relationships    metadata       playback
+             │             │             │
+             └─────────────┼─────────────┘
+                           ▼
+                  BUILD THE UNIVERSE
+                           │
+                           ▼
+                    EXPLORE + LISTEN
