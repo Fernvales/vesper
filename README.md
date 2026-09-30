@@ -7,89 +7,76 @@
 </p>
 
 <p align="center">
-  <i>An experimental music discovery experience built around the connections between songs.</i>
+  <i>Search a song. Explore the music around it.</i>
 </p>
 
 ---
 
-## The idea
+## What is Vesper?
 
-Most music discovery experiences give you a list.
+Most music discovery gives you a list. Vesper gives you a map.
 
-**Vesper gives you a universe.**
+Search for any song and it becomes the center of an interactive universe. Related songs and artists orbit around it as connected signals, so you find new music by following the connections instead of scrolling through results.
 
-Search for a song and explore the music surrounding it through an interactive visual map. Instead of treating songs as isolated results, Vesper turns music discovery into an experience built around connections, exploration, and sound.
-
-The goal was simple:
-
-> **Make music discovery feel like exploration.**
+> Music discovery should feel like exploration.
 
 ---
 
-## The Universe
+## Explore the universe
 
 <p align="center">
   <img src="./public/screenshots/universe.PNG" alt="Vesper song universe" width="100%">
 </p>
 
-Every song becomes a center point.
-
-Vesper uses real music data to build a visual universe around the selected track, revealing related artists and songs as connected signals.
-
-Explore outward from one song and see where the music takes you.
+Every song is a center point. Vesper pulls real music data to place related artists and tracks around your selection, then lets you explore outward and see where the music leads.
 
 ---
 
-## Follow the Signal
+## Listen as you go
 
 <p align="center">
   <img src="./public/screenshots/signal.PNG" alt="Vesper song signal" width="100%">
 </p>
 
-Select a signal and listen while continuing to explore.
-
-Vesper combines music discovery with audio playback so finding something new doesn't mean leaving the experience.
+Pick a signal and it plays right there. Discovery and listening happen in the same place, so finding something new never means leaving the experience.
 
 ---
 
-## The Experience
+## The look
 
-Vesper was designed to feel less like a traditional web application and more like entering a different space.
-
-Dark celestial visuals, subtle motion, typography, orbital layouts, and restrained color create the visual language of the project.
+Vesper is meant to feel less like a web app and more like stepping into another space: dark celestial visuals, subtle motion, orbital layouts, careful typography, and a restrained color palette.
 
 ---
 
 ## How it works
 
-Vesper is built around several music APIs working together rather than relying on a single source.
+No single API does everything, so Vesper combines several, each doing the job it's best at.
+
+| Step | Service | What it does |
+|---|---|---|
+| Search | iTunes / Deezer | Finds the song you're looking for |
+| Relationships | Last.fm | Finds related songs and artists |
+| Metadata | Deezer | Fills in song and artist details |
+| Playback | SoundCloud | Plays the selected signal |
 
 ```text
-                         SEARCH
-                           │
-                           ▼
-                    ┌─────────────┐
-                    │   iTunes    │
-                    │   / Deezer  │
-                    └──────┬──────┘
-                           │
-                           ▼
-                    SELECT A SONG
-                           │
-                           ▼
-                  ┌─────────────────┐
-                  │  SONG + ARTIST  │
-                  │     METADATA    │
-                  └────────┬────────┘
-                           │
-             ┌─────────────┼─────────────┐
-             ▼             ▼             ▼
-         Last.fm        Deezer       SoundCloud
-        relationships    metadata       playback
-             │             │             │
-             └─────────────┼─────────────┘
-                           ▼
-                  BUILD THE UNIVERSE
-                           │
-                           ▼
-                    EXPLORE + LISTEN
+  SEARCH  (iTunes / Deezer)
+     │
+     ▼
+  SELECT A SONG
+     │
+     ▼
+  SONG + ARTIST METADATA
+     │
+     ├── Last.fm     → relationships
+     ├── Deezer      → metadata
+     └── SoundCloud  → playback
+     │
+     ▼
+  BUILD THE UNIVERSE
+     │
+     ▼
+  EXPLORE + LISTEN
+```
+
+---
